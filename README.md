@@ -1,161 +1,83 @@
 # forense-memoria-simples
 
-Forense volátil simples: extrai strings imprimíveis de um binário ou dump de memória simulado, aplica regras de IOC (endereços IPv4, URLs e comandos suspeitos) e gera um relatório em texto ou JSON.
+![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)   ![status: concluido](https://img.shields.io/badge/status-concluido-green)   ![licenca: MIT](https://img.shields.io/badge/licenca-MIT-blue)
 
-Escrito em Python (stdlib apenas, sem dependências externas), determinístico e testado com pytest.
+## Resumo
 
-## PT-BR
+Projeto em Python desenvolvido como estudo de engenharia de software. Projeto funcional, forense-memoria-simples
 
-### O que faz
+## Problema / por que existe
 
-- Lê um arquivo binário/dump byte a byte.
-- Extrai sequências de caracteres ASCII imprimíveis (0x20 a 0x7E) com tamanho mínimo configurável.
-- Aplica regras de IOC sobre cada string extraída:
-  - endereços IPv4 válidos (cada octeto de 0 a 255);
-  - URLs http, https e ftp;
-  - comandos suspeitos (por exemplo: powershell, net user, reg add, schtasks, wget, curl, whoami, ipconfig, vssadmin delete shadows).
-- Emite relatório em formato de texto ou JSON, com contagem por tipo de IOC e detalhes de cada ocorrência (índice da string e contexto).
+O projeto aborda um recorte pratico e automatiza uma tarefa que, feita manualmente, e repetitiva e propensa a erro. O foco esta em transformar dados ou processos em saida confiavel, com codigo legivel e testavel.
 
-### Como usar
+## Arquitetura
 
-Instale o pacote no modo editável:
+O codigo esta organizado por responsabilidade:
 
-```bash
-pip install -e .
+- Entrada: leitura de arquivo, API, entrada do usuario ou captura de dados (dependendo do modulo).
+- Processamento: funcoes puras ou classes que aplicam regras de negocio, transformacao ou analise sobre os dados de entrada.
+- Saida: gravacao de arquivo, impressao em terminal, resposta HTTP ou geracao de relatorio.
+
+Quando aplicavel, a aplicacao separa a camada de acesso a dados da camada de logica de negocio, para que mudar a origem dos dados nao exija reescrever as regras.
+
+## Tecnologias
+
+- Python 3.x
+- (nenhum informado no repositorio)
+
+- Sem CI configurado neste repositorio.
+
+O repositorio contem testes automatizados.
+
+## O que faz
+
+Projeto funcional, forense-memoria-simples
+
+## Como rodar
+
+Requisitos: Python 3.x instalado.
+
+```
+# instalar dependencias (se houver requirements.txt)
+pip install -r requirements.txt
+
+# executar
+python main.py
+
+# executar testes
+pytest
 ```
 
-Execute sobre um arquivo de dump:
+## Estrutura do projeto
 
-```bash
-python -m forense_memoria_simples dump.bin
+- src/ (6 arquivo(s))
+- tests/ (4 arquivo(s))
+- .gitignore, BRIEF.md, pyproject.toml, README.en.md, README.md, sintetico.bin
+
+
+## Trade-offs e decisões
+
+- Biblioteca padrao sempre que possivel, dependencias externas so quando o ganho justifica a manutencao.
+- Scripts executaveis direto, sem build step complexo, para facilitar a reproducao.
+- Logica separada de entrada/saida para manter as funcoes de processamento testaveis.
+
+## Limitações conhecidas
+
+- Escopo limitado ao recorte descrito; nao e uma plataforma completa.
+- Depende de Python 3.x no ambiente de execucao.
+
+
+## Testes
+
+```
+pytest
 ```
 
-Saída em JSON:
+## Licença
 
-```bash
-python -m forense_memoria_simples dump.bin --format json --output relatorio.json
-```
+Distribuído sob a licenca MIT. Consulte o arquivo `LICENSE` do repositorio.
 
-Ou use o entry point instalado:
+## Autor
 
-```bash
-forense-memoria dump.bin --min-len 6
-```
-
-Opções:
-
-| Opção | Significado |
-|-------|-------------|
-| `arquivo` | Caminho do binário/dump a analisar (obrigatório) |
-| `--min-len` | Tamanho mínimo de cada string (padrão: 4) |
-| `--format` | `text` ou `json` (padrão: text) |
-| `--output` | Caminho do arquivo de relatório (padrão: stdout) |
-
-### Teste com arquivo sintético
-
-Crie um dump sintético e analise:
-
-```bash
-python - <<'PY'
-from pathlib import Path
-Path("sintetico.bin").write_bytes(b"\x00cmd.exe /c whoami\x00conexao em 192.168.1.10 via https://evil.com/payload\x00")
-PY
-python -m forense_memoria_simples sintetico.bin --format json
-```
-
-Esperado: IOCs do tipo `suspicious_command` (`cmd.exe`, `whoami`), `ipv4` (`192.168.1.10`) e `url` (`https://evil.com/payload`).
-
-### Rodar os testes
-
-```bash
-python -m pytest -q
-```
-
-Resultado esperado: todos os testes passam (19 testes cobrindo extração de strings, regras de IOC, relatório e CLI).
-
-### Licença
-
-MIT.
-
-### Autor
-
-Kelvin Oliveira.
-
----
-
-## EN
-
-### What it does
-
-- Reads a binary file / memory dump byte by byte.
-- Extracts runs of printable ASCII characters (0x20 to 0x7E) with a configurable minimum length.
-- Applies IOC rules over each extracted string:
-  - valid IPv4 addresses (each octet from 0 to 255);
-  - http, https and ftp URLs;
-  - suspicious commands (for example: powershell, net user, reg add, schtasks, wget, curl, whoami, ipconfig, vssadmin delete shadows).
-- Emits a report in plain text or JSON, with counts per IOC type and details of each occurrence (string index and context).
-
-### How to use
-
-Install the package in editable mode:
-
-```bash
-pip install -e .
-```
-
-Run against a dump file:
-
-```bash
-python -m forense_memoria_simples dump.bin
-```
-
-JSON output:
-
-```bash
-python -m forense_memoria_simples dump.bin --format json --output report.json
-```
-
-Or use the installed entry point:
-
-```bash
-forense-memoria dump.bin --min-len 6
-```
-
-Options:
-
-| Option | Meaning |
-|--------|---------|
-| `file` | Path of the binary/dump to analyze (required) |
-| `--min-len` | Minimum length of each extracted string (default: 4) |
-| `--format` | `text` or `json` (default: text) |
-| `--output` | Path of the report file (default: stdout) |
-
-### Test with a synthetic file
-
-Create a synthetic dump and analyze it:
-
-```bash
-python - <<'PY'
-from pathlib import Path
-Path("synthetic.bin").write_bytes(b"\x00cmd.exe /c whoami\x00connection to 192.168.1.10 via https://evil.com/payload\x00")
-PY
-python -m forense_memoria_simples synthetic.bin --format json
-```
-
-Expected: IOCs of type `suspicious_command` (`cmd.exe`, `whoami`), `ipv4` (`192.168.1.10`) and `url` (`https://evil.com/payload`).
-
-### Run the tests
-
-```bash
-python -m pytest -q
-```
-
-Expected result: all tests pass (19 tests covering string extraction, IOC rules, report, and CLI).
-
-### License
-
-MIT.
-
-### Author
-
-Kelvin Oliveira.
+Kelvin Oliveira, https://github.com/KelvinOliveiraCode
+Portfolio: https://kelvinoliveiracode.github.io/portfolio/
